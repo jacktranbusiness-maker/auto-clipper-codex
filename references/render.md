@@ -6,11 +6,11 @@ CSV UTF-8, mỗi hàng một ep, dùng giây thập phân:
 
 ```csv
 episode,start_seconds,end_seconds,filename,story_beat
-1,0,210,HANDS off my TWIN (Ep01).mp4,A complete beat followed by a new conflict
-2,210,430,HANDS off my TWIN (Ep02).mp4,The next beat resolves
+1,0,210,A Rabbit Shifter's Fated Match (Part1).mp4,A complete beat followed by a new conflict
+2,210,430,A Rabbit Shifter's Fated Match (Part2).mp4,The next beat resolves
 ```
 
-Filename = tên phim + một dấu cách + (EpNN) hoặc (PartNN) + .mp4, khớp nguyên title trong titles.txt. Dùng cùng tên phim và kiểu hậu tố cho cả bộ, đánh số từ 01; không thêm hashtag hoặc tiền tố Unicode. Chốt title trước khi ghi cutlist. Mốc ví dụ chỉ minh họa schema; chọn mốc thật theo nội dung, mục tiêu 180–250 giây/ep. Có thể thêm duration_seconds; helper tính từ in/out. Các ep nối tiếp liên tục từ 0 tới hết nguồn, không bỏ hoặc lặp cảnh.
+Filename là nguyên title đề xuất (lựa chọn 1) + `.mp4`: tên series dùng nhất quán và hậu tố `(Ep01)`, `(Ep02)`, … hoặc `(Part1)`, `(Part2)`, … đúng số phần. Ví dụ `Her Husband's Love Kept Her From Heaven (Ep01).mp4`. Theo kiểu người dùng/title gốc, mặc định dùng `Part` nếu chưa có; số ASCII, `Ep` ít nhất 2 chữ số, `Part` không thêm số 0 phía trước. Title và filename mặc định không có hashtag hoặc tiền tố Episode Unicode. Chọn tên series biên tập theo quy tắc trong `SKILL.md`, rồi chốt title trước khi ghi cutlist để helper xuất đúng tên ngay từ đầu. Mốc ví dụ chỉ minh họa schema; mỗi ep/part mục tiêu 180–250 giây. Có thể thêm `duration_seconds`; helper tính từ in/out. Mốc bắt đầu ep sau bằng mốc kết ep trước; cuối cùng bằng thời lượng nguồn. Thời gian quy về timeline nguồn bắt đầu từ 0.
 
 ## Helper
 
@@ -33,4 +33,4 @@ Nếu render gián đoạn, kiểm tra report và file đã xuất. Để render
 - So sánh từng ep với in/out; helper từ chối sai lệch quá 0.25 giây. Với nguồn fps rất thấp cần đánh giá tolerance riêng.
 - Đối chiếu hình hiển thị, fps/time base, codec, audio; nghe vài giây hai phía **mọi** join.
 - Kiểm tra decode: `ffmpeg -v error -i <clip> -f null -`. Đây là kiểm tra đọc/giải mã, không xác nhận nội dung hay sync cảm nhận.
-- Kiểm tra thời lượng mục tiêu 180–250 giây cho từng ep/part; cân lại mốc liền kề và các tập cuối để tránh đuôi quá ngắn. Ghi trong `split_plan.md` lý do tập ngoài khoảng và QA đã thực sự thực hiện.
+- Kiểm tra thời lượng mục tiêu 180–250 giây cho từng ep/part; cân lại mốc liền kề để tránh đuôi quá ngắn. Ghi trong `split_plan.md` lý do tập ngoài khoảng và QA đã thực sự thực hiện.
