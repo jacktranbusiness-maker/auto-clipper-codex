@@ -1,0 +1,37 @@
+---
+name: auto-clipper-codex
+description: Chia video dài hoặc full series thành các ep liên tiếp khoảng 60–90 giây theo mạch truyện, xuất clip và title options kèm hashtag. Dùng cho một video hoặc batch video; không phải workflow tuyển highlight hay đảo cảnh.
+---
+
+# Auto Clipper Codex
+
+Tạo series có thể xem nối tiếp từ video gốc: chọn mốc theo nội dung, giữ trọn trình tự hình/tiếng, xuất từng ep và tiêu đề có căn cứ.
+
+## Quy ước mặc định
+
+- Mỗi ep mục tiêu 60–90 giây; ưu tiên hết câu, đủ phản ứng và một nút truyện hoặc cliffhanger tự nhiên. Đây là khoảng mục tiêu trừ khi người dùng yêu cầu giới hạn cứng. Cân lại các tập gần cuối để tránh đuôi quá ngắn; giải thích tập ngoài khoảng.
+- Các khoảng nguồn liên tiếp từ 0 tới hết video, không mất cảnh, đảo thứ tự hoặc lặp nội dung. Không tự thêm intro, recap, crop, chữ, nhạc hay phụ đề mới.
+- Output mặc định của Codex là `output-codex/<stem video>/`, chứa các clip, `titles.txt`, `cutlist.csv`, `split_plan.md`. Với input trong folder `source`, `source2`, …, đặt `output-codex` cạnh folder nguồn (ví dụ `long vids/source` → `long vids/output-codex`); các trường hợp khác đặt `output-codex` trong folder chứa video nguồn. Dùng output root riêng nếu người dùng chỉ định. Không tự dùng folder `output` hoặc `output-claude` dành cho Claude. Nếu trùng folder bộ phim, tạo tên folder có suffix thay vì ghi đè bản cũ.
+- Title viết theo phong cách title full series gốc: dài, cụ thể, có tình huống/xung đột và cú chuyển hoặc câu hỏi tạo tò mò (ví dụ “She…—Then…” hoặc “…Unaware…”). Bám diễn biến thật trong ep, không sao chép nguyên title full cho mọi tập, không thêm tiết lộ của tập sau. Với cả 3 lựa chọn title mỗi ep, viết phần nội dung dài thêm khoảng 5–7 từ so với phong cách cũ khoảng 100–140 ký tự; không tính tiền tố Episode và hashtag. Bổ sung chi tiết tình huống, xung đột hoặc phản ứng có thật trong ep; không kéo dài bằng câu rỗng hay tiết lộ tập sau.
+- **Mọi title bắt đầu bằng tiền tố Unicode đúng mẫu `【𝗘𝗽𝗶𝘀𝗼𝗱𝗲 𝟭】`, `【𝗘𝗽𝗶𝘀𝗼𝗱𝗲 𝟮】`, …, `【𝗘𝗽𝗶𝘀𝗼𝗱𝗲 𝟭𝟬】`**. Bắt đầu lại từ 1 cho mỗi video nguồn; không thêm số 0 ở trước. Dùng chữ `𝗘𝗽𝗶𝘀𝗼𝗱𝗲` và bộ chữ số `𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵`, không thay bằng chữ/số ASCII hoặc kiểu Unicode khác.
+- **Filename clip = nguyên title đề xuất (lựa chọn 1), gồm tiền tố Episode + title dài + đúng 3 hashtag + `.mp4`**. Ví dụ `【𝗘𝗽𝗶𝘀𝗼𝗱𝗲 𝟭】 They Mocked the Mafia Boss's Fake Wife—Then She Stood Up for the Daughter Everyone Had Failed! #MafiaRomance #FakeMarriage #DramaSeries.mp4`. Không thêm tiền tố số tập khác như `EP01` hoặc `01 -`. Nếu tên trùng, không hợp lệ hoặc quá dài cho filesystem, sửa phần nội dung title trong TXT trước rồi dùng nguyên title đã sửa làm filename; giữ tiền tố Unicode và đủ 3 hashtag.
+- Khi đổi tên hoặc chuyển các bộ đã render, thực hiện trực tiếp trên file, không chỉ sửa TXT; cập nhật filename/path trong cutlist, report, manifest và link bàn giao liên quan. Chỉ chuyển output xác định thuộc Codex; giữ nguyên nguồn và output của công cụ khác.
+- `titles.txt`: 3 lựa chọn mỗi ep, lựa chọn đề xuất đứng đầu; mỗi title có **đúng 3 hashtag** liên quan thể loại/nội dung. Ngôn ngữ title theo yêu cầu, nếu chưa có thì theo video. Không tiết lộ hoặc bịa diễn biến ngoài ep để câu view.
+- Với “N video đầu”: lọc file video trực tiếp trong folder, sắp xếp tên ổn định rồi lấy N; thông báo danh sách đã chọn. Không lấy ảnh, folder output hay file tạm.
+
+## Thực hiện
+
+1. Kiểm tra đường dẫn và công cụ hiện có. Dùng `ffprobe` đọc thời lượng, stream, kích thước, fps, audio và subtitle; không giả định video là stream 0. Giữ nguyên nguồn. Chỉ hỏi thông tin thiếu nếu nó chặn công việc.
+2. Đọc nội dung **toàn bộ** video trước khi chốt mốc. Ưu tiên subtitle có timestamp sẵn. Nếu subtitle đốt trên hình, đọc [quy trình OCR](references/ocr-macos.md); crop và ngôn ngữ phải được hiệu chỉnh cho từng video. Không có subtitle thì dùng ASR sẵn có phù hợp. Quyền xử lý local không tự mở rộng thành quyền upload video tới dịch vụ khác.
+3. Lập bản đồ diễn biến có timestamp: nhân vật, xung đột, tiết lộ, phản ứng, chuyển cảnh. OCR/ASR có thể sai tên và bỏ sót cảnh im lặng; đối chiếu khung hình và âm thanh ở điểm quan trọng. Scene detection/silence chỉ là tín hiệu phụ.
+4. Chọn các mốc gần 60–90 giây theo toàn bộ câu chuyện. Xem/nghe vài giây trước và sau mỗi mốc để không chặt ngang câu hoặc hành động. OCR lấy mẫu 1 giây chỉ định vị ứng viên, không chứng minh mốc chính xác tới frame. Đánh giá điểm nối cuối ep trước → đầu ep sau.
+5. Viết 3 lựa chọn title có căn cứ cho từng ep vào `titles.txt`, chốt lựa chọn 1 và filename gồm tiền tố Episode Unicode + title dài + đúng 3 hashtag, rồi ghi `cutlist.csv` và `split_plan.md` trước khi render. Nêu source, thời lượng, mốc in/out, độ dài, lý do kết tập, nguồn transcript và giới hạn kiểm chứng. Nếu người dùng yêu cầu cắt, tiếp tục xuất clip; nếu chỉ yêu cầu kế hoạch thì dừng ở kế hoạch. Không tạo bước xin duyệt mới chỉ vì đã có bản kế hoạch.
+6. Xuất bằng FFmpeg. Đọc [hợp đồng render và kiểm tra](references/render.md), dùng `scripts/render_episodes.py` cho encode H.264/AAC thông thường. Giữ tỷ lệ, kích thước hiển thị và nhịp hình nguồn; không ép mọi video thành 30 fps. Cắt chính xác thường cần encode lại; stream copy chỉ dùng khi phù hợp keyframe và chấp nhận sai lệch. Không gọi encode lại là lossless.
+7. Kiểm tra đủ ep, đủ 3 lựa chọn/ep và đúng 3 hashtag/title trong TXT UTF-8. Kiểm tra **tên file MP4 thực tế** bằng nguyên lựa chọn 1 + `.mp4`, gồm tiền tố Episode Unicode đúng số tập, title dài theo phong cách full series gốc và đủ 3 hashtag. Tự đổi tên nếu chưa khớp, đồng thời cập nhật cutlist/report/manifest liên quan; không dừng ở việc ghi title trong TXT. Nếu vướng giới hạn độ dài filename, rút gọn phần nội dung title đề xuất trong TXT trước, giữ nguyên tiền tố Episode Unicode và 3 hashtag rồi dùng title đó làm filename.
+8. Kiểm tra metadata từng file, thời lượng so với cutlist, audio nếu nguồn có, khả năng decode và khung hình đầu/cuối. Nghe/xem joins để xác nhận mạch truyện và sync; script không thay thế QA nội dung. Sửa ep lỗi rồi kiểm tra lại ep bị ảnh hưởng. Báo rõ nếu chỉ kiểm tra bằng metadata/ảnh mà chưa nghe.
+
+## Giao kết quả
+
+Link folder output và `titles.txt`, nêu số ep, khoảng thời lượng, ngoại lệ và hạn chế QA còn lại. Với batch, báo theo từng video và tiếp tục các video độc lập nếu một file lỗi; không báo hoàn tất khi render còn chạy. Không đăng tải lên nền tảng khi chưa có yêu cầu.
+
+Skill rút từ session `01a14984-3c9d-7073-af2e-d2799b694bc1`: thử nghiệm đã xuất 6 ep từ video 20:43 bằng OCR local + FFmpeg. Đường dẫn, nhân vật và mốc thử nghiệm không phải mặc định cho video mới. Lượt batch 3 video còn đang chạy lúc đọc session, không được coi là bằng chứng đã hoàn thành.
